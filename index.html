@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Life Raft Status — MV Nordic Star</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0d1117;
+      --bg-surface: #161b22;
+      --bg-card: #1c2128;
+      --bg-hover: #21262d;
+      --border: #30363d;
+      --border-subtle: #21262d;
+      --text-primary: #e6edf3;
+      --text-secondary: #8b949e;
+      --text-muted: #484f58;
+      --green: #3fb950;
+      --green-dim: #1a3a1e;
+      --green-text: #56d364;
+      --yellow: #d29922;
+      --yellow-dim: #3a2d10;
+      --yellow-text: #e3b341;
+      --red: #da3633;
+      --red-dim: #3a1414;
+      --red-text: #f85149;
+      --accent: #1f6feb;
+      --accent-dim: #0d2444;
+      --mono: "JetBrains Mono", monospace;
+      --sans: "Inter", system-ui, sans-serif;
+    }
+    body { font-family: var(--sans); background: var(--bg); color: var(--text-primary); min-height: 100vh; line-height: 1.5; }
+
+    header {
+      border-bottom: 1px solid var(--border);
+      padding: 0 2rem;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--bg-surface);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .logo { display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 600; letter-spacing: 0.04em; color: var(--text-primary); text-transform: uppercase; }
+    .logo svg { color: #1f6feb; }
+    .header-right { display: flex; align-items: center; gap: 1rem; font-size: 12px; color: var(--text-secondary); font-family: var(--mono); }
+    .live-indicator { display: flex; align-items: center; gap: 5px; }
+    .live-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); animation: pulse 2s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+    .page { max-width: 1300px; margin: 0 auto; padding: 2rem; }
+    .vessel-name { font-family: var(--mono); font-size: 11px; color: var(--text-secondary); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 0.25rem; }
+    .page-title { font-size: 22px; font-weight: 600; margin-bottom: 1.5rem; }
+
+    .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 1.5rem; }
+    .stat-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.25rem; display: flex; align-items: center; gap: 14px; }
+    .stat-icon { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .stat-icon.green { background: var(--green-dim); }
+    .stat-icon.yellow { background: var(--yellow-dim); }
+    .stat-icon.red { background: var(--red-dim); }
+    .stat-dot { width: 12px; height: 12px; border-radius: 50%; }
+    .stat-dot.green { background: var(--green); }
+    .stat-dot.yellow { background: var(--yellow); }
+    .stat-dot.red { background: var(--red); }
+    .stat-num { font-size: 24px; font-weight: 600; font-family: var(--mono); line-height: 1; }
+    .stat-num.green { color: var(--green-text); }
+    .stat-num.yellow { color: var(--yellow-text); }
+    .stat-num.red { color: var(--red-text); }
+    .stat-label { font-size: 11px; color: var(--text-secondary); margin-top: 3px; text-transform: uppercase; letter-spacing: 0.06em; }
+
+    .vessel-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 1.25rem; margin-bottom: 1.5rem; }
+    .vessel-card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; flex-wrap: wrap; gap: 8px; }
+    .section-label { font-size: 11px; font-weight: 500; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.08em; }
+    .legend { display: flex; gap: 1.25rem; flex-wrap: wrap; }
+    .legend-item { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-secondary); }
+    .legend-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    #vessel-svg { width: 100%; height: auto; display: block; }
+    .raft-group { cursor: pointer; }
+    .raft-group:hover .raft-outer { opacity: 1 !important; }
+    .raft-group:focus { outline: none; }
+    .raft-group:focus .raft-outer { opacity: 1 !important; }
+
+    /* Detail panel */
+    .detail-panel { background: var(--bg-surface); border: 1px solid var(--accent); border-radius: 8px; padding: 1.25rem; margin-bottom: 1.5rem; display: none; scroll-margin-top: 70px; }
+    .detail-panel.show { display: block; }
+    .detail-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 1rem; gap: 12px; }
+    .detail-title { font-family: var(--mono); font-size: 15px; font-weight: 500; }
+    .detail-subtitle { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+    .detail-close { background: none; border: none; color: var(--text-secondary); cursor: pointer; font-size: 20px; line-height: 1; padding: 0 4px; flex-shrink: 0; }
+    .detail-close:hover { color: var(--text-primary); }
+    .detail-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px 20px; margin-bottom: 1rem; }
+    .detail-field-label { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 3px; }
+    .detail-field-val { font-size: 13px; font-family: var(--mono); color: var(--text-primary); }
+    .detail-note { padding-top: 10px; border-top: 1px solid var(--border-subtle); font-size: 12px; color: var(--text-secondary); }
+    .detail-note strong { color: var(--text-primary); font-weight: 500; }
+
+    /* Table */
+    .table-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+    .table-header { display: flex; align-items: center; justify-content: space-between; padding: 0.875rem 1.25rem; border-bottom: 1px solid var(--border); }
+    .table-scroll { max-height: 420px; overflow-y: auto; }
+    .table-scroll::-webkit-scrollbar { width: 6px; }
+    .table-scroll::-webkit-scrollbar-track { background: transparent; }
+    .table-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    thead th { position: sticky; top: 0; background: var(--bg-surface); font-size: 10px; font-weight: 500; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em; padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--border); white-space: nowrap; }
+    tbody tr { border-bottom: 1px solid var(--border-subtle); cursor: pointer; transition: background 0.1s; }
+    tbody tr:hover { background: var(--bg-hover); }
+    tbody tr.selected { background: var(--accent-dim); }
+    tbody tr.selected:hover { background: #0f2d54; }
+    tbody td { padding: 10px 12px; vertical-align: middle; }
+    .raft-id { font-family: var(--mono); font-size: 12px; font-weight: 500; color: var(--text-primary); }
+    .badge { display: inline-flex; align-items: center; gap: 5px; font-size: 10px; font-weight: 500; padding: 3px 8px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.05em; white-space: nowrap; }
+    .badge-dot { width: 5px; height: 5px; border-radius: 50%; }
+    .badge.green { background: var(--green-dim); color: var(--green-text); }
+    .badge.green .badge-dot { background: var(--green); }
+    .badge.yellow { background: var(--yellow-dim); color: var(--yellow-text); }
+    .badge.yellow .badge-dot { background: var(--yellow); }
+    .badge.red { background: var(--red-dim); color: var(--red-text); }
+    .badge.red .badge-dot { background: var(--red); }
+    .mono-sm { font-family: var(--mono); font-size: 11px; color: var(--text-secondary); }
+    .overdue { color: var(--red-text) !important; }
+    .warn { color: var(--yellow-text) !important; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M2 20a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-1a2 2 0 0 1-2-2H4a2 2 0 0 1-2 2v1z"/>
+      <path d="M12 2L2 17h20L12 2z"/>
+    </svg>
+    Viking Life-Saving Equipment
+  </div>
+  <div class="header-right">
+    <div class="live-indicator"><div class="live-dot"></div>Live</div>
+    <span id="clock"></span>
+  </div>
+</header>
+
+<main class="page">
+  <p class="vessel-name">IMO 9876543 · MV Nordic Star · Container vessel · Flag: DNK</p>
+  <h1 class="page-title">Life raft status overview</h1>
+
+  <div class="stats">
+    <div class="stat-card">
+      <div class="stat-icon green"><div class="stat-dot green"></div></div>
+      <div>
+        <div class="stat-num green" id="cnt-green">—</div>
+        <div class="stat-label">Operational</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon yellow"><div class="stat-dot yellow"></div></div>
+      <div>
+        <div class="stat-num yellow" id="cnt-yellow">—</div>
+        <div class="stat-label">Crew inspection due</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon red"><div class="stat-dot red"></div></div>
+      <div>
+        <div class="stat-num red" id="cnt-red">—</div>
+        <div class="stat-label">Viking service plan active</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="vessel-card">
+    <div class="vessel-card-header">
+      <span class="section-label">Vessel diagram — top view · click a raft to jump to details</span>
+      <div class="legend">
+        <div class="legend-item"><div class="legend-dot" style="background:#3fb950"></div>Operational</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#d29922"></div>Crew inspection due</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#da3633"></div>Viking service plan active</div>
+      </div>
+    </div>
+    <svg id="vessel-svg" viewBox="0 0 700 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Top-down vessel diagram with clickable life raft positions"></svg>
+  </div>
+
+  <div class="detail-panel" id="detail-panel">
+    <div class="detail-header">
+      <div>
+        <div class="detail-title" id="detail-title"></div>
+        <div class="detail-subtitle" id="detail-subtitle"></div>
+      </div>
+      <button class="detail-close" onclick="closeDetail()" aria-label="Close">×</button>
+    </div>
+    <div class="detail-grid" id="detail-grid"></div>
+    <div class="detail-note" id="detail-note"></div>
+  </div>
+
+  <div class="table-card">
+    <div class="table-header">
+      <span class="section-label">All Viking S30 life rafts — <span id="total-count">0</span> onboard</span>
+      <span class="mono-sm">30-month service interval · Crew inspection (SOLAS III/20.8.3)</span>
+    </div>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Raft no.</th>
+            <th>Location</th>
+            <th>Side</th>
+            <th>Launch type</th>
+            <th>Capacity</th>
+            <th>Pack (SOLAS)</th>
+            <th>Status</th>
+            <th>Last service</th>
+            <th>Time since service</th>
+            <th>Next service due</th>
+          </tr>
+        </thead>
+        <tbody id="raft-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</main>
+
+<script>
+// Viking S30 life raft data — 30-month service interval, crew inspection
+const RAFTS = [
+  { id:"LR-01", side:"Port",      posRatio:0.13, status:"green",  cap:20, launch:"Throw-overboard", pack:"SOLAS A", mfgDate:"2022-01-15", last:"2024-06-10", next:"2026-12-10", annualDue:"2025-06-10", location:"Fore port",         serialNo:"S30-DK-220115-01", note:"Crew inspection completed 2025-06-10. Log book updated. All 3-step test procedures passed. Container inspection window clear." },
+  { id:"LR-02", side:"Starboard", posRatio:0.13, status:"green",  cap:20, launch:"Throw-overboard", pack:"SOLAS A", mfgDate:"2022-01-15", last:"2024-06-10", next:"2026-12-10", annualDue:"2025-06-10", location:"Fore starboard",    serialNo:"S30-DK-220115-02", note:"Crew inspection completed 2025-06-10. Log book updated. All 3-step test procedures passed. Container inspection window clear." },
+  { id:"LR-03", side:"Port",      posRatio:0.30, status:"yellow", cap:25, launch:"Davit-launched",  pack:"SOLAS A", mfgDate:"2022-03-20", last:"2024-09-18", next:"2027-03-18", annualDue:"2025-09-18", location:"Mid-fore port",     serialNo:"S30-DK-220320-03", note:"Crew inspection overdue since 2025-09-18. Testing tool and log book on bridge. Crew to complete 3-step onboard procedure. Hydrostatic release unit (HRU) visual check required." },
+  { id:"LR-04", side:"Starboard", posRatio:0.30, status:"green",  cap:25, launch:"Davit-launched",  pack:"SOLAS A", mfgDate:"2022-03-20", last:"2024-09-18", next:"2027-03-18", annualDue:"2025-09-18", location:"Mid-fore starboard",serialNo:"S30-DK-220320-04", note:"Crew inspection completed 2025-09-18. Log book updated. Hermetically sealed membrane confirmed intact. Container inspection window clear." },
+  { id:"LR-05", side:"Port",      posRatio:0.46, status:"red",    cap:25, launch:"Davit-launched",  pack:"SOLAS A", mfgDate:"2021-11-05", last:"2024-05-05", next:"2027-05-05", annualDue:"2026-05-05", location:"Mid port",          serialNo:"S30-DK-211105-05", note:"30-month service interval reached. Viking Life Safety preparing service plan. Raft to be transported to certified S30 servicing station. Do not deploy — raft removed from emergency muster list until serviced. Contact local Viking office." },
+  { id:"LR-06", side:"Starboard", posRatio:0.46, status:"green",  cap:25, launch:"Davit-launched",  pack:"SOLAS A", mfgDate:"2021-11-05", last:"2024-05-05", next:"2027-05-05", annualDue:"2026-05-05", location:"Mid starboard",    serialNo:"S30-DK-211105-06", note:"Crew inspection completed 2025-05-05. Log book updated. All 3-step test procedures passed. Hermetically sealed membrane confirmed intact." },
+  { id:"LR-07", side:"Port",      posRatio:0.62, status:"yellow", cap:20, launch:"Throw-overboard", pack:"SOLAS B", mfgDate:"2022-06-01", last:"2024-11-28", next:"2027-05-28", annualDue:"2025-11-28", location:"Mid-aft port",      serialNo:"S30-DK-220601-07", note:"Crew inspection overdue since 2025-11-28. Testing briefcase located in deck office. HRU and painter line visual check required per onboard procedure. Record result in S30 log book." },
+  { id:"LR-08", side:"Starboard", posRatio:0.62, status:"red",    cap:20, launch:"Throw-overboard", pack:"SOLAS B", mfgDate:"2021-09-10", last:"2024-03-10", next:"2026-09-10", annualDue:"2026-03-10", location:"Mid-aft starboard", serialNo:"S30-DK-210910-08", note:"30-month service interval reached. Viking Life Safety preparing service plan. Raft to be transported to certified S30 servicing station. Container hermetic membrane replaced at service. Do not deploy — removed from muster list. Ref: Viking S30 portal case #VL-08-2024." },
+  { id:"LR-09", side:"Port",      posRatio:0.77, status:"green",  cap:20, launch:"Throw-overboard", pack:"SOLAS B", mfgDate:"2022-08-14", last:"2025-02-12", next:"2027-08-12", annualDue:"2026-02-12", location:"Aft port",         serialNo:"S30-DK-220814-09", note:"Crew inspection completed 2026-02-12. Log book updated. All 3-step test procedures passed. Container inspection window clear. Fiberglass container condition: good." },
+  { id:"LR-10", side:"Starboard", posRatio:0.77, status:"yellow", cap:20, launch:"Throw-overboard", pack:"SOLAS B", mfgDate:"2022-08-14", last:"2025-02-12", next:"2027-08-12", annualDue:"2026-02-12", location:"Aft starboard",   serialNo:"S30-DK-220814-10", note:"Crew inspection due 2026-02-12. Testing tool and briefcase stored on bridge deck. Complete 3-step S30 onboard procedure and record in log book. Hydrostatic release unit check included." },
+];
+
+const COLOR  = { green:"#3fb950", yellow:"#d29922", red:"#da3633" };
+const LABEL  = { green:"Operational", yellow:"Crew inspection due", red:"Viking service plan active" };
+
+function timeSince(dateStr) {
+  const months = (new Date() - new Date(dateStr)) / (1000 * 60 * 60 * 24 * 30.44);
+  return `${Math.floor(months)} mo`;
+}
+
+function isOverdue(dateStr) { return new Date(dateStr) < new Date(); }
+function monthsUntil(dateStr) {
+  const diff = new Date(dateStr) - new Date();
+  return diff / (1000 * 60 * 60 * 24 * 30.44);
+}
+
+function drawVessel() {
+  const svg = document.getElementById("vessel-svg");
+  const W = 700, H = 200, midY = H / 2;
+  const shipL = 28, shipR = 672;
+  const bodyStart = shipL + 90;
+  const bodyW = shipR - bodyStart - 30;
+  const hullH = 54;
+  const top = midY - hullH / 2, bot = midY + hullH / 2;
+
+  const hullD = `M ${shipL} ${midY} L ${bodyStart} ${top} L ${shipR - 30} ${top} Q ${shipR + 8} ${top} ${shipR + 8} ${midY} Q ${shipR + 8} ${bot} ${shipR - 30} ${bot} L ${bodyStart} ${bot} Z`;
+
+  let h = `
+    <path d="${hullD}" fill="#161b22" stroke="#30363d" stroke-width="1.5"/>
+    <line x1="${bodyStart}" y1="${midY}" x2="${shipR}" y2="${midY}" stroke="#21262d" stroke-width="0.75" stroke-dasharray="5,4"/>
+  `;
+
+  // Bridge block
+  const bx = bodyStart + 4, bw = 58, bh = 44;
+  h += `<rect x="${bx}" y="${midY - bh/2}" width="${bw}" height="${bh}" fill="#1c2128" stroke="#30363d" stroke-width="1" rx="3"/>
+    <text x="${bx + bw/2}" y="${midY + 4}" text-anchor="middle" font-size="8" fill="#8b949e" font-family="'JetBrains Mono',monospace" letter-spacing="1">BRIDGE</text>`;
+
+  // Cargo holds
+  [0.27, 0.44, 0.61, 0.77].forEach(p => {
+    const x = bodyStart + p * bodyW;
+    h += `<rect x="${x}" y="${top + 5}" width="70" height="${hullH - 10}" fill="none" stroke="#21262d" stroke-width="0.75" rx="2"/>`;
+  });
+
+  // Frame ticks
+  for (let i = 0; i <= 50; i++) {
+    const x = bodyStart + (i / 50) * bodyW;
+    const len = i % 5 === 0 ? 5 : 3;
+    h += `<line x1="${x}" y1="${midY - len}" x2="${x}" y2="${midY + len}" stroke="#484f58" stroke-width="0.5"/>`;
+    if (i % 10 === 0) {
+      h += `<text x="${x}" y="${midY + 15}" text-anchor="middle" font-size="7" fill="#484f58" font-family="'JetBrains Mono',monospace">${50 - i}</text>`;
+    }
+  }
+
+  // Side labels
+  h += `<text x="${bodyStart + 68}" y="${top - 8}" font-size="9" fill="#484f58" font-family="'Inter',sans-serif" letter-spacing="0.08em">PORT</text>`;
+  h += `<text x="${bodyStart + 68}" y="${bot + 18}" font-size="9" fill="#484f58" font-family="'Inter',sans-serif" letter-spacing="0.08em">STARBOARD</text>`;
+
+  // Raft dots
+  RAFTS.forEach(r => {
+    const x = bodyStart + r.posRatio * bodyW;
+    const y = r.side === "Port" ? top - 15 : bot + 15;
+    const c = COLOR[r.status];
+    h += `<g class="raft-group" data-id="${r.id}" tabindex="0" role="button" aria-label="${r.id} — ${r.location} — ${LABEL[r.status]}">
+      <circle cx="${x}" cy="${y}" r="10" fill="${c}" fill-opacity="0.12" stroke="${c}" stroke-width="1" class="raft-outer"/>
+      <circle cx="${x}" cy="${y}" r="5" fill="${c}" id="svgdot-${r.id}"/>
+      <text x="${x}" y="${y + (r.side === 'Port' ? -16 : 20)}" text-anchor="middle" font-size="7" fill="${c}" font-family="'JetBrains Mono',monospace" opacity="0.7">${r.id.replace('LR-','LR-')}</text>
+    </g>`;
+  });
+
+  svg.innerHTML = h;
+
+  svg.querySelectorAll(".raft-group").forEach(g => {
+    g.addEventListener("click", () => selectRaft(g.dataset.id, true));
+    g.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") selectRaft(g.dataset.id, true); });
+  });
+}
+
+function renderTable() {
+  const tbody = document.getElementById("raft-tbody");
+  tbody.innerHTML = "";
+  RAFTS.forEach(r => {
+    const tr = document.createElement("tr");
+    tr.id = `row-${r.id}`;
+    tr.dataset.id = r.id;
+    const nextOver = isOverdue(r.next);
+    const annualOver = isOverdue(r.annualDue);
+    const mo = monthsUntil(r.next);
+    const nextClass = nextOver ? "overdue" : mo < 3 ? "warn" : "";
+    const sinceVal = timeSince(r.last);
+    const sinceMonths = (new Date() - new Date(r.last)) / (1000 * 60 * 60 * 24 * 30.44);
+    const sinceClass = sinceMonths > 30 ? "overdue" : sinceMonths > 24 ? "warn" : "";
+
+    tr.innerHTML = `
+      <td class="raft-id">${r.id}</td>
+      <td style="color:var(--text-secondary);white-space:nowrap">${r.location}</td>
+      <td style="color:var(--text-secondary)">${r.side}</td>
+      <td class="mono-sm" style="white-space:nowrap">${r.launch}</td>
+      <td class="mono-sm">${r.cap} pers.</td>
+      <td class="mono-sm">${r.pack}</td>
+      <td><span class="badge ${r.status}"><span class="badge-dot"></span>${LABEL[r.status]}</span></td>
+      <td class="mono-sm">${r.last}</td>
+      <td class="mono-sm ${sinceClass}">${sinceVal}</td>
+      <td class="mono-sm ${nextClass}">${r.next}${nextOver ? ' ⚠' : ''}</td>
+    `;
+    tr.addEventListener("click", () => selectRaft(r.id, false));
+    tbody.appendChild(tr);
+  });
+
+  document.getElementById("cnt-green").textContent  = RAFTS.filter(r => r.status === "green").length;
+  document.getElementById("cnt-yellow").textContent = RAFTS.filter(r => r.status === "yellow").length;
+  document.getElementById("cnt-red").textContent    = RAFTS.filter(r => r.status === "red").length;
+  document.getElementById("total-count").textContent = RAFTS.length;
+}
+
+function selectRaft(id, scrollToDetail) {
+  const r = RAFTS.find(x => x.id === id);
+  if (!r) return;
+
+  document.querySelectorAll("tbody tr").forEach(tr => tr.classList.toggle("selected", tr.dataset.id === id));
+
+  const panel = document.getElementById("detail-panel");
+  panel.classList.add("show");
+  document.getElementById("detail-title").textContent = `${r.id} — ${r.location} (${r.side})`;
+  document.getElementById("detail-subtitle").textContent = `Serial: ${r.serialNo} · Viking S30 · ${r.launch} · ${r.pack}`;
+
+  const nextOver = isOverdue(r.next);
+  const annualOver = isOverdue(r.annualDue);
+  const since = timeSince(r.last);
+  const sinceMonths = (new Date() - new Date(r.last)) / (1000 * 60 * 60 * 24 * 30.44);
+  const sinceClass = sinceMonths > 30 ? "overdue" : sinceMonths > 24 ? "warn" : "";
+
+  document.getElementById("detail-grid").innerHTML = `
+    <div>
+      <div class="detail-field-label">Status</div>
+      <div class="detail-field-val"><span class="badge ${r.status}" style="font-size:11px"><span class="badge-dot"></span>${LABEL[r.status]}</span></div>
+    </div>
+    <div>
+      <div class="detail-field-label">Capacity</div>
+      <div class="detail-field-val">${r.cap} persons</div>
+    </div>
+    <div>
+      <div class="detail-field-label">Launch type</div>
+      <div class="detail-field-val">${r.launch}</div>
+    </div>
+    <div>
+      <div class="detail-field-label">Emergency pack</div>
+      <div class="detail-field-val">${r.pack}</div>
+    </div>
+    <div>
+      <div class="detail-field-label">Date of manufacture</div>
+      <div class="detail-field-val">${r.mfgDate}</div>
+    </div>
+    <div>
+      <div class="detail-field-label">Last station service</div>
+      <div class="detail-field-val">${r.last}</div>
+    </div>
+    <div>
+      <div class="detail-field-label">Time since service</div>
+      <div class="detail-field-val ${sinceClass}">${since}</div>
+    </div>
+    <div>
+      <div class="detail-field-label">Next station service</div>
+      <div class="detail-field-val ${nextOver ? 'overdue' : ''}">${r.next}${nextOver ? ' ⚠' : ''}</div>
+    </div>
+    <div>
+      <div class="detail-field-label">Crew inspection due</div>
+      <div class="detail-field-val ${annualOver ? 'overdue' : ''}">${r.annualDue}${annualOver ? ' ⚠' : ''}</div>
+    </div>
+    <div>
+      <div class="detail-field-label">Service interval</div>
+      <div class="detail-field-val">30 months (S30)</div>
+    </div>
+    <div>
+      <div class="detail-field-label">Approval</div>
+      <div class="detail-field-val">SOLAS / MED · DNV</div>
+    </div>
+    <div>
+      <div class="detail-field-label">Serial no.</div>
+      <div class="detail-field-val">${r.serialNo}</div>
+    </div>
+  `;
+  document.getElementById("detail-note").innerHTML = `<strong>Notes:</strong> ${r.note}`;
+
+  if (scrollToDetail) {
+    panel.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+}
+
+function closeDetail() {
+  document.getElementById("detail-panel").classList.remove("show");
+  document.querySelectorAll("tbody tr").forEach(tr => tr.classList.remove("selected"));
+}
+
+// Clock
+function updateClock() {
+  const now = new Date();
+  document.getElementById("clock").textContent =
+    now.toISOString().slice(0, 10) + " · " + now.toUTCString().slice(17, 22) + " UTC";
+}
+updateClock();
+setInterval(updateClock, 30000);
+
+drawVessel();
+renderTable();
+</script>
+</body>
+</html>
