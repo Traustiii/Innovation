@@ -33,36 +33,6 @@
       --mono: "JetBrains Mono", monospace;
       --sans: "Inter", system-ui, sans-serif;
     }
-    html.light {
-      --bg: #f6f8fa;
-      --bg-surface: #ffffff;
-      --bg-card: #ffffff;
-      --bg-hover: #f0f2f4;
-      --border: #d0d7de;
-      --border-subtle: #e8ecf0;
-      --text-primary: #1f2328;
-      --text-secondary: #656d76;
-      --text-muted: #9198a1;
-      --green: #1a7f37;
-      --green-dim: #dafbe1;
-      --green-text: #1a7f37;
-      --yellow: #9a6700;
-      --yellow-dim: #fff8c5;
-      --yellow-text: #9a6700;
-      --red: #cf222e;
-      --red-dim: #ffebe9;
-      --red-text: #cf222e;
-      --accent: #0969da;
-      --accent-dim: #ddf4ff;
-    }
-    .theme-btn {
-      display: flex; align-items: center; gap: 6px;
-      background: var(--bg-card); border: 1px solid var(--border);
-      color: var(--text-secondary); border-radius: 6px;
-      padding: 5px 10px; font-size: 12px; font-family: var(--sans);
-      cursor: pointer; transition: color 0.15s, border-color 0.15s, background 0.15s;
-    }
-    .theme-btn:hover { color: var(--text-primary); border-color: var(--text-secondary); }
     body { font-family: var(--sans); background: var(--bg); color: var(--text-primary); min-height: 100vh; line-height: 1.5; }
 
     header {
@@ -171,10 +141,6 @@
   <div class="header-right">
     <div class="live-indicator"><div class="live-dot"></div>Live</div>
     <span id="clock"></span>
-    <button class="theme-btn" onclick="toggleTheme()" id="theme-btn" aria-label="Toggle light/dark mode">
-      <span id="theme-icon">&#9728;&#65039;</span>
-      <span id="theme-label">Light mode</span>
-    </button>
   </div>
 </header>
 
@@ -298,41 +264,37 @@ function drawVessel() {
   const hullD = `M ${shipL} ${midY} L ${bodyStart} ${top} L ${shipR - 30} ${top} Q ${shipR + 8} ${top} ${shipR + 8} ${midY} Q ${shipR + 8} ${bot} ${shipR - 30} ${bot} L ${bodyStart} ${bot} Z`;
 
   let h = `
-    <path d="${hullD}" fill="var(--bg-surface)" stroke="var(--border)" stroke-width="1.5"/>
-    <line x1="${bodyStart}" y1="${midY}" x2="${shipR}" y2="${midY}" stroke="var(--border-subtle)" stroke-width="0.75" stroke-dasharray="5,4"/>
+    <path d="${hullD}" fill="#161b22" stroke="#30363d" stroke-width="1.5"/>
+    <line x1="${bodyStart}" y1="${midY}" x2="${shipR}" y2="${midY}" stroke="#21262d" stroke-width="0.75" stroke-dasharray="5,4"/>
   `;
 
   // Bridge block
   const bx = bodyStart + 4, bw = 58, bh = 44;
-  h += `<rect x="${bx}" y="${midY - bh/2}" width="${bw}" height="${bh}" fill="var(--bg-card)" stroke="var(--border)" stroke-width="1" rx="3"/>
-    <text x="${bx + bw/2}" y="${midY + 4}" text-anchor="middle" font-size="8" fill="var(--text-secondary)" font-family="'JetBrains Mono',monospace" letter-spacing="1">BRIDGE</text>`;
+  h += `<rect x="${bx}" y="${midY - bh/2}" width="${bw}" height="${bh}" fill="#1c2128" stroke="#30363d" stroke-width="1" rx="3"/>
+    <text x="${bx + bw/2}" y="${midY + 4}" text-anchor="middle" font-size="8" fill="#8b949e" font-family="'JetBrains Mono',monospace" letter-spacing="1">BRIDGE</text>`;
 
   // Cargo holds
   [0.27, 0.44, 0.61, 0.77].forEach(p => {
     const x = bodyStart + p * bodyW;
-    h += `<rect x="${x}" y="${top + 5}" width="70" height="${hullH - 10}" fill="none" stroke="var(--border-subtle)" stroke-width="0.75" rx="2"/>`;
+    h += `<rect x="${x}" y="${top + 5}" width="70" height="${hullH - 10}" fill="none" stroke="#21262d" stroke-width="0.75" rx="2"/>`;
   });
 
   // Frame ticks
   for (let i = 0; i <= 50; i++) {
     const x = bodyStart + (i / 50) * bodyW;
     const len = i % 5 === 0 ? 5 : 3;
-    h += `<line x1="${x}" y1="${midY - len}" x2="${x}" y2="${midY + len}" stroke="var(--text-muted)" stroke-width="0.5"/>`;
+    h += `<line x1="${x}" y1="${midY - len}" x2="${x}" y2="${midY + len}" stroke="#484f58" stroke-width="0.5"/>`;
     if (i % 10 === 0) {
-      h += `<text x="${x}" y="${midY + 15}" text-anchor="middle" font-size="7" fill="var(--text-muted)" font-family="'JetBrains Mono',monospace">${50 - i}</text>`;
+      h += `<text x="${x}" y="${midY + 15}" text-anchor="middle" font-size="7" fill="#484f58" font-family="'JetBrains Mono',monospace">${50 - i}</text>`;
     }
   }
 
   // Side labels
-  h += `<text x="${bodyStart + 68}" y="${top - 8}" font-size="9" fill="var(--text-muted)" font-family="'Inter',sans-serif" letter-spacing="0.08em">PORT</text>`;
-  h += `<text x="${bodyStart + 68}" y="${bot + 18}" font-size="9" fill="var(--text-muted)" font-family="'Inter',sans-serif" letter-spacing="0.08em">STARBOARD</text>`;
+  h += `<text x="${bodyStart + 68}" y="${top - 8}" font-size="9" fill="#484f58" font-family="'Inter',sans-serif" letter-spacing="0.08em">PORT</text>`;
+  h += `<text x="${bodyStart + 68}" y="${bot + 18}" font-size="9" fill="#484f58" font-family="'Inter',sans-serif" letter-spacing="0.08em">STARBOARD</text>`;
 
   // Raft dots
-  const sortedRafts = [
-    ...RAFTS.filter(r => r.side === "Port").sort((a, b) => a.id.localeCompare(b.id, undefined, {numeric: true})),
-    ...RAFTS.filter(r => r.side === "Starboard").sort((a, b) => a.id.localeCompare(b.id, undefined, {numeric: true})),
-  ];
-  sortedRafts.forEach(r => {
+  RAFTS.forEach(r => {
     const x = bodyStart + r.posRatio * bodyW;
     const y = r.side === "Port" ? top - 15 : bot + 15;
     const c = COLOR[r.status];
@@ -475,16 +437,6 @@ function updateClock() {
 }
 updateClock();
 setInterval(updateClock, 30000);
-
-// Theme toggle
-function toggleTheme() {
-  const html = document.documentElement;
-  const isLight = html.classList.toggle("light");
-  document.getElementById("theme-icon").textContent = isLight ? "🌙" : "☀️";
-  document.getElementById("theme-label").textContent = isLight ? "Dark mode" : "Light mode";
-  // Redraw vessel so SVG colours update
-  drawVessel();
-}
 
 drawVessel();
 renderTable();
