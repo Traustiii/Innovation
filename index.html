@@ -167,7 +167,7 @@
       <div class="stat-icon red"><div class="stat-dot red"></div></div>
       <div>
         <div class="stat-num red" id="cnt-red">—</div>
-        <div class="stat-label">Viking service plan active</div>
+        <div class="stat-label">Viking servicing</div>
       </div>
     </div>
   </div>
@@ -178,7 +178,7 @@
       <div class="legend">
         <div class="legend-item"><div class="legend-dot" style="background:#3fb950"></div>Operational</div>
         <div class="legend-item"><div class="legend-dot" style="background:#d29922"></div>Crew inspection due</div>
-        <div class="legend-item"><div class="legend-dot" style="background:#da3633"></div>Viking service plan active</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#da3633"></div>Viking servicing</div>
       </div>
     </div>
     <svg id="vessel-svg" viewBox="0 0 700 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Top-down vessel diagram with clickable life raft positions"></svg>
@@ -239,7 +239,7 @@ const RAFTS = [
 ];
 
 const COLOR  = { green:"#3fb950", yellow:"#d29922", red:"#da3633" };
-const LABEL  = { green:"Operational", yellow:"Crew inspection due", red:"Viking service plan active" };
+const LABEL  = { green:"Operational", yellow:"Crew inspection due", red:"Viking servicing" };
 
 function timeSince(dateStr) {
   const months = (new Date() - new Date(dateStr)) / (1000 * 60 * 60 * 24 * 30.44);
